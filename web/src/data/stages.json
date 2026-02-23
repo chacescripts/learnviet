@@ -1,0 +1,45 @@
+[
+  {
+    "sentence": "xin_lỗi , nhà_vệ_sinh ở đâu ?",
+    "contextHint": "You are at a restaurant and urgently need to find a specific room.",
+    "dictionary": { 
+      "xin_lỗi": ["excuse me", "sorry", "pardon"], 
+      "nhà_vệ_sinh": ["toilet", "bathroom", "restroom", "washroom", "the toilet", "the bathroom"], 
+      "ở": ["at", "in", "is at", "located at"], 
+      "đâu": ["where"] 
+    }
+  },
+  {
+    "sentence": "tôi có_thể nói_chuyện với bác_sĩ không ?",
+    "contextHint": "You are feeling sick at a local clinic and approach the reception desk.",
+    "dictionary": { 
+      "tôi": ["i", "me"], 
+      "có_thể": ["can", "could", "able to", "can i"], 
+      "nói_chuyện": ["talk", "speak", "chat"], 
+      "với": ["with", "to"], 
+      "bác_sĩ": ["doctor", "the doctor", "a doctor"], 
+      "không": ["not", "no", "?"] 
+    }
+  },
+  {
+    "sentence": "cái này bao_nhiêu tiền ?",
+    "contextHint": "You are pointing at a beautiful souvenir in a busy market stall.",
+    "dictionary": { 
+      "cái": ["object", "thing", "item"], 
+      "này": ["this", "this one"], 
+      "bao_nhiêu": ["how much", "how many"], 
+      "tiền": ["money", "cost", "price"] 
+    }
+  },
+  {
+    "sentence": "tôi muốn ăn phở bò",
+    "contextHint": "You are sitting at a street food vendor, ready to order Vietnam's most famous dish.",
+    "dictionary": {
+      "tôi": ["i"],
+      "muốn": ["want", "would like", "want to"],
+      "ăn": ["eat", "have"],
+      "phở": ["pho", "noodle soup", "noodles"],
+      "bò": ["beef"]
+    }
+  }
+]

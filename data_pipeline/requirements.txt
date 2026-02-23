@@ -1,0 +1,2 @@
+pyvi==0.1.1
+google-generativeai>=0.8.0
