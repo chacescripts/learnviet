@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VNCN - Learn Vietnamese Contextually",
+  title: "LearnViet - Contextual learning by Chace Teo",
   description: "A gamified Vietnamese language-learning app crafted by Chace Teo. Master 2,000 conversational words through contextual deduction and real-world scenarios.",
   authors: [{ name: "Chace Teo" }],
   keywords: ["Vietnamese", "Language Learning", "Chace Teo", "Contextual Learning", "Deduction Game"],
