@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import SentenceDecoder from "@/components/SentenceDecoder";
 import DialogueReader from "@/components/DialogueReader";
+import PhraseCompendium from "@/components/PhraseCompendium";
 
 import stagesData from "@/data/stages_generated.json"; 
 import dialoguesData from "@/data/dialogues_generated.json";
@@ -195,6 +196,12 @@ export default function Home() {
                 >
                   Reading Dialogues
                 </button>
+                <button 
+                  onClick={() => setPhase("compendium")}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm py-2 px-5 rounded-lg transition-all border border-slate-700 hover:text-emerald-400 flex items-center gap-2"
+                >
+                  Phrase Compendium
+                </button>
              </div>
           </div>
         </div>
@@ -302,6 +309,10 @@ export default function Home() {
              <div className="text-slate-400">Loading dialogue data...</div>
           )}
         </div>
+      )}
+
+      {phase === "compendium" && (
+        <PhraseCompendium onBack={() => setPhase("landing")} />
       )}
 
       {phase === "completed" && (

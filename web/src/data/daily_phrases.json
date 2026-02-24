@@ -1,0 +1,62 @@
+[
+  {
+    "vietnamese": "Chào anh ạ",
+    "english": "Hello (to older male)",
+    "context": "Greeting",
+    "nuance": "Polite, commonly used in workplace or daily life."
+  },
+  {
+    "vietnamese": "Không sao đâu",
+    "english": "It's okay / No problem",
+    "context": "Reassurance",
+    "nuance": "Casual, widely used to brush off an apology."
+  },
+  {
+    "vietnamese": "Bao nhiêu tiền ạ?",
+    "english": "How much is it?",
+    "context": "Shopping",
+    "nuance": "Polite form (ạ) at the end, essential for markets or cafes."
+  },
+  {
+    "vietnamese": "Anh ơi, thanh toán",
+    "english": "Check, please!",
+    "context": "Restaurant",
+    "nuance": "Calling a male waiter to pay the bill."
+  },
+  {
+    "vietnamese": "Đi ăn trưa không?",
+    "english": "Want to go get lunch?",
+    "context": "Office",
+    "nuance": "Very common colleague interaction."
+  },
+  {
+    "vietnamese": "Em hiểu rồi",
+    "english": "I understand",
+    "context": "Workplace",
+    "nuance": "Said by a junior/younger person confirming instruction."
+  },
+  {
+    "vietnamese": "Trời ơi",
+    "english": "Oh my god",
+    "context": "Exclamation",
+    "nuance": "Used constantly to express surprise, frustration, or shock."
+  },
+  {
+    "vietnamese": "Cái này là gì?",
+    "english": "What is this?",
+    "context": "General",
+    "nuance": "Basic daily question."
+  },
+  {
+    "vietnamese": "Chờ một chút",
+    "english": "Wait a moment",
+    "context": "General",
+    "nuance": "Polite but firm request to wait."
+  },
+  {
+    "vietnamese": "Cảm ơn nhiều",
+    "english": "Thanks a lot",
+    "context": "Gratitude",
+    "nuance": "Standard informal/semi-formal thank you."
+  }
+]
