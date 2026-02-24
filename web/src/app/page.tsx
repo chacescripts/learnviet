@@ -56,6 +56,7 @@ export default function Home() {
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [unlockedWords, setUnlockedWords] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Load progress on initial client-side mount
   useEffect(() => {
@@ -154,7 +155,18 @@ export default function Home() {
              <div className="text-slate-500 text-sm uppercase tracking-wider font-semibold">Skip to Phase</div>
              <div className="flex gap-3 justify-center">
                 <button 
-                  onClick={() => setPhase("stages")}
+                  onClick={() => {
+                    const stageNum = window.prompt(`Enter stage number to skip to (1-${STAGES.length}):`, "1");
+                    if (stageNum !== null) {
+                      const idx = parseInt(stageNum, 10) - 1;
+                      if (!isNaN(idx) && idx >= 0 && idx < STAGES.length) {
+                        setCurrentStageIndex(idx);
+                        setPhase("stages");
+                      } else {
+                        alert("Invalid stage number.");
+                      }
+                    }
+                  }}
                   className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm py-2 px-5 rounded-lg transition-all border border-slate-700 hover:text-emerald-400"
                 >
                   Decoding Stages
@@ -209,8 +221,17 @@ export default function Home() {
               <span>Your Vocabulary Database</span>
               <span className="bg-slate-800 text-slate-300 py-1 px-3 rounded-full">{unlockedWords.size} words</span>
             </h3>
+            <input 
+              type="text" 
+              placeholder="Search vocabulary..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full mb-4 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-300 focus:outline-none focus:border-emerald-500 transition-colors"
+            />
             <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
-              {Array.from(unlockedWords).map(word => {
+              {Array.from(unlockedWords)
+                .filter(word => word.replace(/_/g, " ").includes(searchTerm.toLowerCase()))
+                .map(word => {
                 const dictEntry = STAGES.find(s => s.dictionary && s.dictionary[word])?.dictionary[word];
                 const translation = Array.isArray(dictEntry) ? dictEntry[0] : (dictEntry || "known");
                 return (

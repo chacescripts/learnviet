@@ -133,6 +133,25 @@ export default function SentenceDecoder({
                 'Verify'
               )}
             </button>
+            
+            {feedback !== 'success' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFeedback("success");
+                  setTimeout(() => {
+                    onUnlock(activeWord);
+                    setJustUnlocked(activeWord);
+                    setActiveWord(null);
+                    setFeedback(null);
+                    setTimeout(() => setJustUnlocked(null), 2000);
+                  }, 400);
+                }}
+                className="w-full py-2 mt-2 text-sm text-slate-400 hover:text-slate-300 transition-colors"
+              >
+                Skip word (I already know this)
+              </button>
+            )}
           </form>
 
           {failedAttempts >= 3 && (
