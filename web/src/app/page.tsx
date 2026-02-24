@@ -78,6 +78,24 @@ export default function Home() {
     });
   };
 
+  const handleUnlockManyAndSkip = (wordsToUnlock: string[]) => {
+    setUnlockedWords(prev => {
+      const next = new Set(prev);
+      wordsToUnlock.forEach(w => next.add(w));
+      
+      if (currentStageIndex < STAGES.length - 1) {
+        const nextIndex = currentStageIndex + 1;
+        saveProgress(nextIndex, currentDialogueIndex, next, phase);
+        setCurrentStageIndex(nextIndex);
+      } else {
+        saveProgress(currentStageIndex, currentDialogueIndex, next, "dialogues");
+        setPhase("dialogues");
+      }
+      
+      return next;
+    });
+  };
+
   const handleNextStage = () => {
     if (currentStageIndex < STAGES.length - 1) {
       const nextIndex = currentStageIndex + 1;
@@ -105,7 +123,7 @@ export default function Home() {
   if (!isLoaded) return <main className="min-h-screen bg-slate-900" />;
 
   return (
-    <main className="min-h-screen bg-slate-900 flex flex-col items-center py-12 px-6 md:px-24 selection:bg-slate-700 selection:text-emerald-400">
+    <main className="min-h-screen bg-slate-900 flex flex-col items-center py-6 px-4 md:px-12 selection:bg-slate-700 selection:text-emerald-400">
       
       {phase === "landing" && (
         <div className="w-full max-w-2xl flex-grow flex flex-col items-center justify-center text-center space-y-8 py-10">
@@ -184,13 +202,13 @@ export default function Home() {
 
       {phase === "stages" && (
         <div className="w-full max-w-4xl flex flex-col items-center">
-          <header className="mb-12 w-full text-center space-y-4">
-            <div className="flex items-center justify-between mb-4 text-slate-500 text-sm font-medium uppercase tracking-widest px-4">
+          <header className="mb-6 w-full text-center space-y-3">
+            <div className="flex items-center justify-between mb-2 text-slate-500 text-xs font-medium uppercase tracking-widest px-2">
               <span>Stage {currentStageIndex + 1} / {STAGES.length}</span>
               <span>Total Vocab: {unlockedWords.size} / 2000</span>
             </div>
             
-            <div className="w-full bg-slate-800 rounded-full h-1.5 mb-8 overflow-hidden">
+            <div className="w-full bg-slate-800 rounded-full h-1 mb-4 overflow-hidden">
                <div 
                  className="bg-emerald-500 h-1.5 transition-all duration-500 ease-out" 
                  style={{ width: `${((currentStageIndex + 1) / STAGES.length) * 100}%` }}
@@ -212,12 +230,13 @@ export default function Home() {
             dictionary={STAGES[currentStageIndex]?.dictionary || {}} 
             unlockedWords={unlockedWords}
             onUnlock={handleUnlock}
+            onUnlockMany={handleUnlockManyAndSkip}
             onNextStage={handleNextStage}
             isLastStage={currentStageIndex === STAGES.length - 1}
           />
           
-          <div className="mt-16 w-full max-w-3xl bg-slate-800/30 border border-slate-800 rounded-xl p-6">
-            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-4 flex justify-between items-center">
+          <div className="mt-6 w-full max-w-3xl bg-slate-800/30 border border-slate-800 rounded-xl p-4">
+            <h3 className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-3 flex justify-between items-center">
               <span>Your Vocabulary Database</span>
               <span className="bg-slate-800 text-slate-300 py-1 px-3 rounded-full">{unlockedWords.size} words</span>
             </h3>
@@ -226,23 +245,25 @@ export default function Home() {
               placeholder="Search vocabulary..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full mb-4 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-300 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-300 focus:outline-none focus:border-emerald-500 transition-colors"
             />
-            <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
-              {Array.from(unlockedWords)
-                .filter(word => word.replace(/_/g, " ").includes(searchTerm.toLowerCase()))
-                .map(word => {
-                const dictEntry = STAGES.find(s => s.dictionary && s.dictionary[word])?.dictionary[word];
-                const translation = Array.isArray(dictEntry) ? dictEntry[0] : (dictEntry || "known");
-                return (
-                  <div key={word} className="bg-slate-800 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-all hover:bg-slate-700">
-                    <span className="font-medium text-slate-100">{word.replace(/_/g, " ")}</span>
-                    <span className="text-slate-500 text-xs">|</span>
-                    <span className="text-emerald-400/80">{translation}</span>
-                  </div>
-                );
-              })}
-            </div>
+            {searchTerm.trim() !== "" && (
+              <div className="flex flex-wrap gap-2 mt-4 max-h-32 overflow-y-auto custom-scrollbar pr-2">
+                {Array.from(unlockedWords)
+                  .filter(word => word.replace(/_/g, " ").includes(searchTerm.toLowerCase()))
+                  .map(word => {
+                  const dictEntry = STAGES.find(s => s.dictionary && s.dictionary[word])?.dictionary[word];
+                  const translation = Array.isArray(dictEntry) ? dictEntry[0] : (dictEntry || "known");
+                  return (
+                    <div key={word} className="bg-slate-800 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-all hover:bg-slate-700">
+                      <span className="font-medium text-slate-100">{word.replace(/_/g, " ")}</span>
+                      <span className="text-slate-500 text-xs">|</span>
+                      <span className="text-emerald-400/80">{translation}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

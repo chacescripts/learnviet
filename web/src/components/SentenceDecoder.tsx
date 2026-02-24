@@ -9,6 +9,7 @@ interface SentenceDecoderProps {
   dictionary: Record<string, string | string[]>;
   unlockedWords: Set<string>;
   onUnlock: (word: string) => void;
+  onUnlockMany?: (words: string[]) => void;
   onNextStage: () => void;
   isLastStage: boolean;
 }
@@ -19,6 +20,7 @@ export default function SentenceDecoder({
   dictionary, 
   unlockedWords, 
   onUnlock,
+  onUnlockMany,
   onNextStage,
   isLastStage
 }: SentenceDecoderProps) {
@@ -177,8 +179,8 @@ export default function SentenceDecoder({
 
   return (
     <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
-      <div className="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-8 md:p-12 shadow-lg backdrop-blur-sm">
-        <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-4 text-2xl md:text-4xl leading-loose font-medium">
+      <div className="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-6 md:p-8 shadow-lg backdrop-blur-sm">
+        <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-3 text-xl md:text-3xl leading-relaxed font-medium">
           {tokens.map((token, index) => {
             const isPunctuation = /^[.,?!]+$/.test(token);
             const displayToken = token.replace(/_/g, " ");
@@ -222,20 +224,37 @@ export default function SentenceDecoder({
           })}
         </div>
         
-        <div className="mt-10 pt-8 border-t border-slate-700/50 text-center">
-          <p className="text-sm text-slate-500 uppercase tracking-widest mb-2 font-semibold">Context Clue</p>
-          <p className="text-xl text-slate-300 italic font-light">
+        <div className="mt-6 pt-6 border-t border-slate-700/50 text-center">
+          <p className="text-xs text-slate-500 uppercase tracking-widest mb-2 font-semibold">Context Clue</p>
+          <p className="text-lg text-slate-300 italic font-light">
             "{contextHint}"
           </p>
         </div>
       </div>
       
-      {isSentenceFullyUnlocked && (
+      {isSentenceFullyUnlocked ? (
         <button 
           onClick={onNextStage}
-          className="mt-8 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold py-3 px-6 rounded-xl flex items-center transition-all hover:scale-105 shadow-lg shadow-emerald-500/20"
+          className="mt-6 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold py-3 px-6 rounded-xl flex items-center transition-all hover:scale-105 shadow-lg shadow-emerald-500/20"
         >
           {isLastStage ? 'Next Phase (Reading Comprehension)' : 'Next Scenario'} <ArrowRight className="ml-2" size={20} />
+        </button>
+      ) : (
+        <button 
+          onClick={() => {
+            const remainingWords = tokens.filter(token => 
+              !/^[.,?!]+$/.test(token) && dictionary[token] && !unlockedWords.has(token)
+            );
+            if (onUnlockMany) {
+              onUnlockMany(remainingWords);
+            } else {
+              remainingWords.forEach(word => onUnlock(word));
+              onNextStage(); // Fallback
+            }
+          }}
+          className="mt-6 bg-slate-800/80 hover:bg-slate-700 text-slate-400 text-sm font-medium py-3 px-6 rounded-xl flex items-center transition-all hover:text-slate-200 border border-slate-700 shadow-sm"
+        >
+          I know all remaining words, skip to next scenario
         </button>
       )}
 
