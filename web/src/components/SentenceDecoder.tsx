@@ -57,7 +57,7 @@ export default function SentenceDecoder({
         setFeedback(null);
         
         setTimeout(() => setJustUnlocked(null), 2000);
-      }, 600);
+      }, 1500); // Increased from 600ms to 1500ms
     } else {
       setFeedback("error");
       setFailedAttempts(prev => prev + 1);
@@ -145,7 +145,7 @@ export default function SentenceDecoder({
                     setActiveWord(null);
                     setFeedback(null);
                     setTimeout(() => setJustUnlocked(null), 2000);
-                  }, 400);
+                  }, 1500); // Increased from 400ms to 1500ms
                 }}
                 className="w-full py-2 mt-2 text-sm text-slate-400 hover:text-slate-300 transition-colors"
               >
