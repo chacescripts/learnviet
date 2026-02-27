@@ -22,20 +22,15 @@ STOP_WORDS = {
 def is_valid_phrase(phrase):
     if not phrase or len(phrase.strip()) < 3:
         return False
-    
     if re.search(r'[0-9]', phrase):
         return False
-        
     if bool(re.search(r'[^\w\s]', phrase)):
         return False
-        
     words = phrase.split()
     if len(words) < 2:
         return False
-        
     if words[0] in STOP_WORDS or words[-1] in STOP_WORDS:
         return False
-
     return True
 
 def extract_ngrams(input_file, top_n=1000, max_lines=None):
@@ -47,29 +42,21 @@ def extract_ngrams(input_file, top_n=1000, max_lines=None):
         for line in f:
             if max_lines and line_count >= max_lines:
                 break
-                
             line = line.strip().lower()
             if not line:
                 continue
-            
-            # Clean punctuation
             cleaned = re.sub(r'[^\w\s]', '', line)
             words = cleaned.split()
-            
-            # Extract 2-to-4 word phrases
             for n in range(2, 5):
                 for i in range(len(words) - n + 1):
                     phrase = " ".join(words[i:i+n])
                     if is_valid_phrase(phrase):
                         phrase_counts[phrase] += 1
-                        
             line_count += 1
-            if line_count % 100000 == 0:
+            if line_count % 500000 == 0:
                 print(f"Processed {line_count} lines...")
                         
     print(f"Extracted {len(phrase_counts)} unique raw phrases.")
-    
-    # Return top N by frequency
     most_common = phrase_counts.most_common(top_n)
     return [p[0] for p in most_common]
 
@@ -86,15 +73,37 @@ def setup_gemini(api_key):
     })
     return model
 
-def filter_with_llm(model, raw_phrases, batch_size=50):
-    print(f"Filtering {len(raw_phrases)} phrases using Gemini...")
-    valid_phrases = []
+def filter_with_llm(model, raw_phrases, output_path, batch_size=50):
+    progress_file = Path(output_path).parent / "phrase_generation_progress.json"
     
-    # Process in batches
-    total_batches = (len(raw_phrases) + batch_size - 1) // batch_size
-    for i in range(0, len(raw_phrases), batch_size):
-        batch = raw_phrases[i:i+batch_size]
-        print(f"Processing batch {i//batch_size + 1}/{total_batches}...")
+    valid_phrases = []
+    processed_count = 0
+    
+    # Load progress if it exists
+    if progress_file.exists():
+        try:
+            with open(progress_file, 'r', encoding='utf-8') as f:
+                progress = json.load(f)
+                valid_phrases = progress.get('valid_phrases', [])
+                processed_count = progress.get('processed_count', 0)
+            print(f"Resuming from progress: {processed_count} phrases already evaluated. Found {len(valid_phrases)} valid phrases so far.")
+        except Exception as e:
+            print(f"Could not load progress file. Starting fresh. Error: {e}")
+            
+    # Slice the remaining phrases
+    remaining_phrases = raw_phrases[processed_count:]
+    if not remaining_phrases:
+        print("All phrases have already been processed!")
+        return valid_phrases
+
+    print(f"Filtering {len(remaining_phrases)} remaining phrases using Gemini in batches of {batch_size}...")
+    
+    total_batches = (len(remaining_phrases) + batch_size - 1) // batch_size
+    
+    for i in range(0, len(remaining_phrases), batch_size):
+        batch = remaining_phrases[i:i+batch_size]
+        current_batch_num = i // batch_size + 1
+        print(f"Processing batch {current_batch_num}/{total_batches} (Items {processed_count} to {processed_count + len(batch)})...")
         
         prompt = f"""
         You are an expert in Northern Vietnamese dialect and everyday conversational language.
@@ -136,29 +145,46 @@ def filter_with_llm(model, raw_phrases, batch_size=50):
         If NO phrases in the batch are valid, return an empty array [].
         """
         
-        retries = 3
-        while retries > 0:
+        # Infinite retry logic to handle internet drops
+        sleep_time = 5
+        while True:
             try:
                 response = model.generate_content(prompt)
                 batch_results = json.loads(response.text)
                 valid_phrases.extend(batch_results)
-                break
-            except Exception as e:
-                print(f"Error calling Gemini: {e}. Retrying...")
-                retries -= 1
-                time.sleep(5)
                 
-        time.sleep(2) # rate limiting
+                # Successfully processed this batch
+                processed_count += len(batch)
+                
+                # Save progress immediately
+                with open(progress_file, 'w', encoding='utf-8') as f:
+                    json.dump({
+                        'processed_count': processed_count,
+                        'valid_phrases': valid_phrases
+                    }, f, ensure_ascii=False, indent=2)
+                    
+                # Also aggressively overwrite the final destination JSON so the UI can live-reload
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    json.dump(valid_phrases, f, ensure_ascii=False, indent=2)
+                
+                break # Break out of the retry loop and move to the next batch
+                
+            except Exception as e:
+                print(f"Error calling Gemini: {e}. Retrying in {sleep_time} seconds (Network drop/rate limit handling)...")
+                time.sleep(sleep_time)
+                # Cap the sleep time at 60 seconds
+                sleep_time = min(sleep_time * 2, 60)
+                
+        time.sleep(2) # Normal rate limiting between successful batches
         
+    print(f"\nCompleted! Kept {len(valid_phrases)} valid phrases.")
     return valid_phrases
 
 def main():
     parser = argparse.ArgumentParser(description="Extract and filter Northern Vietnamese phrases.")
-    parser.add_argument("--input", type=str, required=True, help="Path to raw corpus (vi.txt)")
+    parser.add_argument("--input", type=str, required=True, help="Path to raw JSON cache (top_2000_raw.json)")
     parser.add_argument("--output", type=str, default="../web/src/data/daily_phrases.json", help="Output JSON path")
     parser.add_argument("--api-key", type=str, help="Gemini API Key (or set GEMINI_API_KEY env var)")
-    parser.add_argument("--top", type=int, default=1000, help="Number of raw phrases to extract before filtering")
-    parser.add_argument("--max-lines", type=int, default=None, help="Max lines to read from corpus (for testing)")
     
     args = parser.parse_args()
     api_key = args.api_key or os.environ.get("GEMINI_API_KEY")
@@ -167,19 +193,15 @@ def main():
         print("Error: Must provide --api-key argument or set GEMINI_API_KEY environment variable.")
         return
 
-    top_raw = extract_ngrams(args.input, args.top, args.max_lines)
+    # Load pre-extracted phrases
+    with open(args.input, 'r', encoding='utf-8') as f:
+        top_raw = json.load(f)
     
     model = setup_gemini(api_key)
-    final_phrases = filter_with_llm(model, top_raw)
-    
     out_path = Path(args.output)
-    # Ensure directory exists
     out_path.parent.mkdir(parents=True, exist_ok=True)
     
-    with open(out_path, 'w', encoding='utf-8') as f:
-        json.dump(final_phrases, f, ensure_ascii=False, indent=2)
-        
-    print(f"Success! Saved {len(final_phrases)} curated phrases to {args.output}")
+    filter_with_llm(model, top_raw, str(out_path))
 
 if __name__ == "__main__":
     main()
