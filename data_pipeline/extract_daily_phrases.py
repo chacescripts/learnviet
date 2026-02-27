@@ -15,19 +15,17 @@ except ImportError:
 
 # Stop words to avoid purely grammatical chunks
 STOP_WORDS = {
-    'của', 'là', 'những', 'các', 'một', 'và', 'thì', 'mà', 'này', 'đó', 'kia', 'ấy'
+    'của', 'là', 'những', 'các', 'một', 'và', 'thì', 'mà', 'này', 'đó', 'kia', 'ấy',
+    'bằng', 'do', 'để', 'với', 'cho', 'từ', 'rằng', 'vì'
 }
 
 def is_valid_phrase(phrase):
-    # Basic filtering to remove pure punctuation or numbers or very short strings
     if not phrase or len(phrase.strip()) < 3:
         return False
     
-    # Exclude if it contains digits
     if re.search(r'[0-9]', phrase):
         return False
         
-    # Exclude if it has weird non-word characters (allow spaces and standard Vietnamese letters)
     if bool(re.search(r'[^\w\s]', phrase)):
         return False
         
@@ -35,7 +33,6 @@ def is_valid_phrase(phrase):
     if len(words) < 2:
         return False
         
-    # Exclude if it starts or ends with a stop word to ensure standalone meaning
     if words[0] in STOP_WORDS or words[-1] in STOP_WORDS:
         return False
 
@@ -107,11 +104,21 @@ def filter_with_llm(model, raw_phrases, batch_size=50):
         Your task:
         1. Filter the list to ONLY keep phrases that are commonly used in daily life or workplace contexts in Northern Vietnam (Hanoi dialect).
         2. Discard any sentence fragments, movie-specific names, or unnatural subtitle translations.
-        3. For the phrases you keep, provide:
-           - "vietnamese": The phrase itself (capitalized naturally as it would be at the start of a sentence or standalone).
+        3. For each valid phrase, you MUST classify it into ONE of these 8 exact categories:
+           - "Pronouns & Self-Reference"
+           - "Negation & Refusal"
+           - "Time & Tense Markers"
+           - "Questions & Inquiries"
+           - "Agreements & Apologies"
+           - "Locations & Positioning"
+           - "Quantifiers & Degrees"
+           - "Core Verbs & Actions"
+        4. Provide:
+           - "vietnamese": The phrase itself (capitalized naturally).
            - "english": A natural English translation.
+           - "category": ONE of the 8 exact categories listed above.
            - "context": A short 1-3 word note on context (e.g., "Office", "Casual greeting", "Restaurant").
-           - "nuance": A brief explanation of its usage or tone (e.g., "Used with older colleagues", "Slightly informal").
+           - "nuance": A brief explanation of its usage or tone.
         
         Phrases to evaluate:
         {json.dumps(batch, ensure_ascii=False)}
@@ -121,6 +128,7 @@ def filter_with_llm(model, raw_phrases, batch_size=50):
           {{
             "vietnamese": "Chào anh ạ",
             "english": "Hello (to older male)",
+            "category": "Agreements & Apologies",
             "context": "Greeting",
             "nuance": "Polite, commonly used in workplace or daily life."
           }}

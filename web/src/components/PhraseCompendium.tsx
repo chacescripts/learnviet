@@ -7,20 +7,24 @@ import dailyPhrases from "@/data/daily_phrases.json";
 interface Phrase {
   vietnamese: string;
   english: string;
+  category?: string;
   context: string;
   nuance: string;
 }
 
 const PHRASES = dailyPhrases as Phrase[];
+const CATEGORIES = ["All", ...Array.from(new Set(PHRASES.map(p => p.category).filter(Boolean)))].sort() as string[];
 
 export default function PhraseCompendium({ onBack }: { onBack: () => void }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const filteredPhrases = PHRASES.filter(
     (p) =>
-      p.vietnamese.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.english.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.context.toLowerCase().includes(searchTerm.toLowerCase())
+      (selectedCategory === "All" || p.category === selectedCategory) &&
+      (p.vietnamese.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       p.english.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       p.context.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -44,6 +48,22 @@ export default function PhraseCompendium({ onBack }: { onBack: () => void }) {
       </header>
 
       <div className="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+        <div className="flex flex-wrap gap-2 mb-6 justify-center">
+          {CATEGORIES.map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                selectedCategory === category 
+                  ? 'bg-emerald-500 text-slate-900 shadow-md shadow-emerald-500/20' 
+                  : 'bg-slate-900 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
         <div className="relative mb-8">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search size={20} className="text-slate-500" />
@@ -59,7 +79,7 @@ export default function PhraseCompendium({ onBack }: { onBack: () => void }) {
 
         {filteredPhrases.length === 0 ? (
           <div className="text-center py-12 text-slate-500">
-            No phrases found matching "{searchTerm}"
+            No phrases found matching "{searchTerm}" {selectedCategory !== "All" && `in ${selectedCategory}`}
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -68,10 +88,15 @@ export default function PhraseCompendium({ onBack }: { onBack: () => void }) {
                 key={idx} 
                 className="bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-xl p-5 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/10 group flex flex-col h-full"
               >
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
                   <span className="text-xs font-bold uppercase tracking-widest text-emerald-500/80 bg-emerald-900/30 px-2 py-1 rounded-md">
                     {phrase.context}
                   </span>
+                  {phrase.category && (
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 bg-slate-800 border border-slate-700 px-2 py-1 rounded-md">
+                      {phrase.category}
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-2xl font-bold text-slate-50 mb-1 group-hover:text-emerald-400 transition-colors">
                   {phrase.vietnamese}
